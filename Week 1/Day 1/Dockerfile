@@ -1,16 +1,16 @@
 FROM centos:latest
 
 RUN yum update -y
-RUN install epel-release -y
+RUN yum install epel-release -y
 RUN yum install gdb -y
 RUN yum install vim -y
-RUN install iftop -y
-RUN install htop -y
-RUN install iotop -y
-RUN install cscope -y
-RUN install tree -y
-RUN install clang -y
-RUN install git -y
-RUN install nano -y
+RUN yum install iftop -y
+RUN yum install htop -y
+RUN yum install iotop -y
+RUN yum install cscope -y
+RUN yum install tree -y
+RUN yum install clang -y
+RUN yum install git -y
+RUN yum install nano -y
 
 RUN dnf group install "Development Tools" -y

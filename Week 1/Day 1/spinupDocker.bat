@@ -1,2 +1,2 @@
 @ECHO OFF
-docker run -dit dockerdev bash
+docker run -v /Sourcecode/ -dit dockerdev bash
