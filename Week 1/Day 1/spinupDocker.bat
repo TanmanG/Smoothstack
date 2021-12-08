@@ -1,5 +1,5 @@
 @ECHO OFF
 
-docker run -it --privileged --mount src=I:\Docker,target=/Docker,type=bind dockerdev bash
+docker run -it --privileged --mount src=I:\Docker\Smoothstack,target=/Docker,type=bind dockerdev bash
 
 PAUSE
