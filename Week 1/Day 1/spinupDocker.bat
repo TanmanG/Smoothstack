@@ -1,2 +1,5 @@
 @ECHO OFF
-docker run -v /Sourcecode/ -dit dockerdev bash
+
+docker run -it --privileged --mount src=I:\Docker,target=/Docker,type=bind dockerdev bash
+
+PAUSE
