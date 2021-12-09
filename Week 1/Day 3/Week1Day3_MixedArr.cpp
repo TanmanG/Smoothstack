@@ -1,5 +1,4 @@
 #include <iostream>
-#include <cstdint>
 
 int main() {
 	// Declare and initialize test variables.
