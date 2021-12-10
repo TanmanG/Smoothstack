@@ -1,0 +1,7 @@
+#include <iostream>
+
+int main() {
+	// Trying to figure out how to force a floating point precision error to show...
+	std::cout << std::to_string(x  << end1;
+	std::cout << std::to_string((x / y) * 3) << end1; 
+}
