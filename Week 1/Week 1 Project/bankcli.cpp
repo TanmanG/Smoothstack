@@ -12,19 +12,32 @@ class Account { public:
 	std::string name;
 	std::string account;
 	std::string date;
+	std::string password;
 	int accountNumber;
 
-	// Overload comparison to allow sets to sort.
+	// Privelege: 0 = user, 1 = admin.
+	int privilege : 1;
+
+	// Overload less-than comparison to allow sets to sort.
 	friend bool operator< (const Account& acc1, const Account& acc2);
+
+	// Overload equal to comparison to allow for comparing accounts.
 };
 
 bool operator< (const Account& acc1, const Account& acc2) {
 	return acc1.accountNumber < acc2.accountNumber;
 }
 
+bool operator== (const Account& acc1, const Account& acc2) {
+	return acc1.accountNumber == acc2.accountNumber;
+}
+
 class BankCLI {
 	private:
 	std::set<Account> accounts;
+	Account activeUser;
+	Account inactiveUser;
+
 	Account GenerateSearchAccountNumber(std::string account) {
 		// Declare a new account.
 		Account retAcc;
@@ -47,7 +60,24 @@ class BankCLI {
 	}
 
 	public:
-	bool NewAccount(std::string name, std::string account) {
+	BankCLI() {
+		Account admin;
+		admin.name = "admin";
+		admin.password = "default";
+		admin.account = "0";
+		admin.accountNumber = 0;
+		admin.privilege = 1;
+
+		inactiveUser.name = "inactive";
+		inactiveUser.password = "";
+		inactiveUser.account = "-1";
+		inactiveUser.accountNumber = -1;
+		inactiveUser.privilege = 0;
+
+		activeUser = inactiveUser;
+	}
+
+	bool NewAccount(std::string name, std::string password, std::string account) {
 		// Pass the string account to verify it meets the required parameters (i.e. "### ## ####" with only numbers and
 		// whitespace characters).
 		if (FormatMatch(account)) {
@@ -58,6 +88,8 @@ class BankCLI {
 			newAcc.name = name;
 			newAcc.account = account;
 			newAcc.date = GenerateDate();
+			newAcc.privilege = 0;
+			newAcc.password = password;
 
 			// Create an integer representation of the account's number for sorting into a set to allow high efficiency
 			// with reading (finding).
@@ -97,7 +129,7 @@ class BankCLI {
 		}
 	}
 
-	void DisplayAccount(std::string account) {
+	bool DisplayAccount(std::string account) {
 		// Check if search key is a valid account number.
 		if (FormatMatch(account)) {
 			// Generate an empty account to use to search the set.
@@ -110,13 +142,16 @@ class BankCLI {
 				std::cout << "Customer Name: " << userAcc->name << '\n';
 				std::cout << "SSN: ### ## " << userAcc->account.substr(7, 4) << '\n';
 				std::cout << "Date Opened: " << userAcc->date << '\n';
+				return true;
 			}
 			else {
 				std::cout << "Account with that SSN not found." << '\n';
+				return false;
 			}
 		}
 		else {
 			std::cout << "Invalid SSN." << '\n';
+			return false;
 		}
 	}
 
@@ -128,36 +163,49 @@ class BankCLI {
 		}
 	}
 
-	void CloseAccount(std::string account) {
+	/* To-do: Play with iterators and find way of tracking account object making use of accounts' find() function.
+	Account GetAccount(std::string account) {
+		auto = accounts.find(GenerateSearchAccountNumber(account));
+	}
+	*/
+
+	bool CloseAccount(std::string account) {
 		if (FormatMatch(account)) {
 			auto delAcc = accounts.find(GenerateSearchAccountNumber(account));
 			if (delAcc != accounts.end()) {
 				std::cout << "Are you sure you want to delete account " << account << " belonging to " << delAcc->name << "? (Y or N)" << '\n';
 				std::string userInput;
 
-				bool breakLoop = false;
 				while (true) {
 					std::cin >> userInput;
 					if (userInput.compare("Y") == 0) {
-						accounts.erase(delAcc);
-						std::cout << "Account deleted." << '\n';
-						break;
+						if (accounts.erase(delAcc) != accounts.end()) {
+							std::cout << "Account deleted." << '\n';
+							return true;
+						}
+						else {
+							std::cout << "Potential error in deletion. Verify set elements." << '\n';
+							return false;
+						}
 					}
 					else if (userInput.compare("N") == 0) {
 						std::cout << "Deletion aborted." << '\n';
-						break;
+						return false;
 					}
 					else {
 						std::cout << "Invalid entry: Enter Y to delete, N to cancel." << '\n';
+						return false;
 					}
 				}
 			}
 			else {
 				std::cout << "Account " << account << " not found." << '\n';
+				return false;
 			}
 		}
 		else {
 			std::cout << "Invalid account number- must contain only digits and spaces (### ## ####)." << '\n';
+			return false;
 		}
 	}
 
@@ -175,13 +223,142 @@ class BankCLI {
 
 		return timeString;
 	}
+
+	/* To-do: Implement tracking for current user. Password encrpytion.
+	bool LogOut() {
+		std::cout << activeUser.accountNumber;
+		return true;
+	}
+
+	// To-do: Password encrpytion.
+	bool LogIn(std::string name, std::string password) {
+		return true;
+	}
+	*/
 };
+
+void Line() {
+	std::cout << "---------------" << '\n';
+}
 
 int main() {
 	BankCLI bank;
+	bool run = true;
+	unsigned char state;
 
-	std::cout << "---------------" << '\n';
-	bank.NewAccount("John Smith", "123 45 6789");
+	state = 0;
+
+	std::string input;
+	while (run) {
+		input = " ";
+
+		switch (state) {
+		// Login: username
+		case 0:
+			Line();
+			std::cout << "Enter login username: ";
+			std::cin >> input;
+
+			if (input.compare("admin") == 0) {
+				state = 1;
+			}
+			break;
+
+		// Login: password
+		case 1:
+			Line();
+			std::cout << "Enter login password: ";
+			std::cin >> input;
+
+			if (input.compare("default") == 0) {
+				state = 2;
+				std::cout << "Login successful!" << '\n';
+			}
+			break;
+
+		// Using
+		case 2:
+			Line();
+			std::cout << "Enter command (type 'help' for a list of commands): ";
+			std::getline(std::cin, input);
+
+			if (input.compare("help") == 0) {
+				std::cout << "show accounts - List all accounts" << '\n';
+				std::cout << "display account - Search a specific account's information" << '\n';
+				std::cout << "search name - Search all accounts for a specific name" << '\n';
+				std::cout << "new account - Create a new account" << '\n';
+				std::cout << "close account - Close an existing account" << '\n';
+				std::cout << "quit - Exit the Bank CLI" << '\n';
+			}
+			else if (input.compare("show accounts") == 0) {
+				bank.DisplayAccounts();
+			}
+			else if (input.compare("display account") == 0) {
+				bool cont = true;
+				while (cont) {
+					std::cout << "Enter account SSN to search (### ## ####) or cancel to exit: ";
+					std::getline(std::cin, input);
+
+					if (input.compare("cancel") == 0) {
+						std::cout << "Cancelling account search." << '\n';
+						break;
+					}
+					cont = !(bank.DisplayAccount(input));
+				}
+			}
+			else if (input.compare("search name") == 0) {
+				// To-implement
+				// Prompt input
+				// Call search method (printing results
+				// i.e. bank.SearchName(input)
+			}
+			else if (input.compare("new account") == 0) {
+				bool cont = true;
+
+				std::string name;
+				std::string account;
+				std::string password;
+				while (cont) {
+					std::cout << "Follow the prompts to create a new account, or, enter cancel to exit." << '\n';
+					std::cout << "Enter the accountholder's name: ";
+					std::getline(std::cin, name);
+					if (name.compare("cancel") == 0) { std::cout << "Cancelling account creation." << '\n'; break; }
+					std::cout << "Enter the accountholder's SSN: ";
+					std::getline(std::cin, account);
+					if (name.compare("cancel") == 0) { std::cout << "Cancelling account creation." << '\n'; break; }
+					std::cout << "Enter the accountholder's password: ";
+					std::getline(std::cin, password);
+					cont = !(bank.NewAccount(name, password, account));
+				}
+			}
+			else if (input.compare("close account") == 0) {
+				bool cont = true;
+
+				std::string account;
+				while (cont) {
+					std::cout << "Enter the SSN of the to-be-deleted account (### ## ####) or cancel to exit: ";
+					std::getline(std::cin, input);
+
+					if (input.compare("cancel") == 0) {
+						std::cout << "Cancelling account closure." << '\n';
+						break;
+					}
+					cont = !(bank.CloseAccount(input));
+				}
+			}
+			else if (input.compare("quit") == 0) {
+				std::cout << "Exiting..." << '\n';
+				state = 3;
+			}
+			break;
+
+		case 3:
+			run = false;
+			break;
+		}
+	}
+
+	/*
 	bank.NewAccount("Jane Doe", "098 76 5432");
 
 	bank.DisplayAccounts();
@@ -199,7 +376,11 @@ int main() {
 	bank.NewAccount("Jane Doe", "098 76 5432");
 
 	std::cout << "---------------" << '\n';
+	bank.LogOut();
+	std::cout << '\n';
 	bank.DisplayAccounts();
+	*/
+
 	return 0;
 }
 
@@ -211,6 +392,7 @@ Implemented Functions:
 - Close account
 
 Unimplemented Functions:
+- Test cases
 - Password system
 - Menu system (and thus quit)
 - Search name
