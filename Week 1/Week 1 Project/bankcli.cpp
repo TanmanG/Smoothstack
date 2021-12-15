@@ -1,11 +1,15 @@
 #include <iostream>
 #include <iomanip>
-#include <string>
-#include <set>
-#include <algorithm>
 #include <regex>
 #include <cstdlib>
 #include <ctime>
+#include <utility>
+#include <algorithm>
+#include <iterator>
+#include <set>
+#include <vector>
+#include <queue>
+#include <string>
 #include <sstream>
 
 class Account { public:
@@ -20,16 +24,10 @@ class Account { public:
 
 	// Overload less-than comparison to allow sets to sort.
 	friend bool operator< (const Account& acc1, const Account& acc2);
-
-	// Overload equal to comparison to allow for comparing accounts.
 };
 
 bool operator< (const Account& acc1, const Account& acc2) {
 	return acc1.accountNumber < acc2.accountNumber;
-}
-
-bool operator== (const Account& acc1, const Account& acc2) {
-	return acc1.accountNumber == acc2.accountNumber;
 }
 
 class BankCLI {
@@ -139,7 +137,7 @@ class BankCLI {
 			// Check if the account was found.
 			if (userAcc != accounts.end()) {
 				// Display account information.
-				std::cout << "Customer Name: " << userAcc->name << '\n';
+				std::cout << "Accountholder Name: " << userAcc->name << '\n';
 				std::cout << "SSN: ### ## " << userAcc->account.substr(7, 4) << '\n';
 				std::cout << "Date Opened: " << userAcc->date << '\n';
 				return true;
@@ -156,10 +154,30 @@ class BankCLI {
 	}
 
 	void DisplayAccounts() {
+		// Iterate through each Account in the accounts set, calling the DisplayAccount function to output their info.
 		std::set<Account>::iterator it = accounts.begin();
 		while (it != accounts.end()) {
 			DisplayAccount(it->account);
 			it++;
+		}
+	}
+
+	void SearchName(std::string name) {
+		std::set<Account>::iterator it = accounts.begin();
+		typedef std::pair<float, std::string> pqAcc;
+		std::priority_queue<pqAcc, std::vector<pqAcc>, std::greater<pqAcc>> accOIs;
+
+		while (it != accounts.end()) {
+			float dissimilarity = LevenshteinDistance(it->name, name) / it->name.length();
+			if (dissimilarity < 0.3) {
+				accOIs.push(std::make_pair(dissimilarity, it->name));
+			}
+			it++;
+		}
+
+		while (!accOIs.empty()) {
+			std::cout << "Accountholder Name: " << accOIs.top().second << '\n';
+			accOIs.pop();
 		}
 	}
 
@@ -222,6 +240,30 @@ class BankCLI {
 		std::string timeString = oss.str();
 
 		return timeString;
+	}
+
+	// Fuzzy string checking
+	int LevenshteinDistance(std::string str1, std::string str2) {
+		int strLenA = str1.length();
+		int strLenB = str2.length();
+
+		if (strLenA == 0) {
+			return strLenB;
+		}
+		if (strLenB == 0) {
+			return strLenA;
+		}
+
+		int cost;
+		if (str1[strLenA - 1] == str2[strLenB - 1]) {
+			cost = 0;
+		}
+		else {
+			cost = 1;
+		}
+
+		return std::min(std::min(LevenshteinDistance(str1.substr(0, strLenA - 1), str2) + 1, LevenshteinDistance(str1, str2.substr(0, strLenB - 1)) + 1),
+					LevenshteinDistance(str1.substr(0, strLenA - 1), str2.substr(0, strLenB - 1)) + cost);
 	}
 
 	/* To-do: Implement tracking for current user. Password encrpytion.
@@ -307,10 +349,11 @@ int main() {
 				}
 			}
 			else if (input.compare("search name") == 0) {
-				// To-implement
-				// Prompt input
-				// Call search method (printing results
-				// i.e. bank.SearchName(input)
+				std::string name;
+				std::cout << "Enter name to search: " << '\n';
+				std::getline(std::cin, name);
+
+				bank.SearchName(name);
 			}
 			else if (input.compare("new account") == 0) {
 				bool cont = true;
