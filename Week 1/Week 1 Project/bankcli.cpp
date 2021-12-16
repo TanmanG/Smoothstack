@@ -164,21 +164,44 @@ class BankCLI {
 
 	void SearchName(std::string name) {
 		std::set<Account>::iterator it = accounts.begin();
-		typedef std::pair<float, std::string> pqAcc;
+		typedef std::tuple<float, std::string, Account> pqAcc;
 		std::priority_queue<pqAcc, std::vector<pqAcc>, std::greater<pqAcc>> accOIs;
 
+		// Iterate through each account and check for similarity, storing ones with a certain limit of dissimilarity (currently 30%).
 		while (it != accounts.end()) {
 			float dissimilarity = LevenshteinDistance(it->name, name) / it->name.length();
 			if (dissimilarity < 0.3) {
-				accOIs.push(std::make_pair(dissimilarity, it->name));
+				accOIs.push(std::make_tuple(dissimilarity, it->name, *it));
 			}
 			it++;
 		}
 
+		// Declare an array for user selection of which account to view.
+		Account selection[accOIs.size()];
+		int arr = 0;
+
+		// Iterate through each stored account, printing and storing them in printed order.
 		while (!accOIs.empty()) {
-			std::cout << "Accountholder Name: " << accOIs.top().second << '\n';
+			std::cout << arr + 1 << ". Accountholder Name: " << std::get<1>(accOIs.top()) << '\n';
+			selection[arr] = std::get<2>(accOIs.top());
 			accOIs.pop();
+			arr++;
 		}
+
+		int input;
+		bool inputInvalid = true;
+		while (inputInvalid) {
+			std::cin.clear();
+			std::cout << "Enter Selection to View: ";
+			std::cin >> input;
+			if (std::cin.fail() || input > arr || input < 1) {
+				std::cout << "Invalid input, enter a number listed!" << '\n';
+				std::numeric_limits<std::streamsize>::max();
+				continue;
+			}
+			inputInvalid = false;
+		}
+		DisplayAccount(selection[input - 1].account);
 	}
 
 	/* To-do: Play with iterators and find way of tracking account object making use of accounts' find() function.
