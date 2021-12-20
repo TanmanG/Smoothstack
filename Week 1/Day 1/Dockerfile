@@ -12,5 +12,18 @@ RUN yum install tree -y
 RUN yum install clang -y
 RUN yum install git -y
 RUN yum install nano -y
-
+RUN yum install wget -y
+RUN dnf install autoconf -y
+RUN dnf install automake -y
+RUN dnf install libtool -y
+RUN dnf install curl -y
+RUN dnf install make -y
+RUN dnf install unzip -y
 RUN dnf group install "Development Tools" -y
+RUN mkdir protobufferDL
+RUN cd protobufferDL
+RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v3.19.1/protobuf-cpp-3.19.1.zip -o rotobuf-cpp-3.19.1.zip
+RUN unzip protobuf-cpp-3.19.1.zip -d protobufferDL
+ENV PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
+ENV LD_LIBRARY_PATH=/usr/local/lib
+

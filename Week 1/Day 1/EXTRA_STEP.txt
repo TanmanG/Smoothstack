@@ -1,0 +1,9 @@
+ ./configure
+ make
+ make check
+ sudo make install
+ sudo ldconfig
+
+Run inside the unzipped file in protobufferDL
+
+c++ bankcli.cpp bankdata.pb.cc -o test `pkg-config --cflags --libs protobuf`

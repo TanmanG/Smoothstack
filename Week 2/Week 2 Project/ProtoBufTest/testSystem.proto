@@ -1,0 +1,8 @@
+syntax = "proto2";
+
+package testsystem;
+
+message Shape {
+	optional string name = 2;
+	repeated int32 number = 1;
+}

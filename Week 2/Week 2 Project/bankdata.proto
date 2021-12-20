@@ -1,0 +1,35 @@
+syntax = "proto2";
+
+package bankdata;
+
+message Transaction {
+	optional int64 transactionID = 1;
+	optional int32 firstPartyID = 2;
+	optional int32 secondPartyID = 3;
+	enum transactiontype {
+		CREDIT = 0;
+		DEBIT = 1;
+	}
+	optional transactiontype type = 4;
+}
+
+message Account {
+	optional string account = 3;
+	optional int64 accountNumber = 4;
+	optional string name = 5;
+	optional string username = 6;
+	optional string password = 7;
+	optional double balance = 8;
+	optional string creationDate = 9;
+	repeated Event events = 1;
+	repeated Transaction transactions = 2;
+}
+
+message Event {
+	optional string date = 1;
+	optional string details = 2;
+}
+
+message BankDB {
+	repeated Account accounts = 1;
+}
